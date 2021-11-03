@@ -5,14 +5,16 @@ from datetime import date, datetime
 
 cache_hits_perfunction={}
 redis_client=None
+prefix=""
 
 #---------------------------------------------------------------------------
 # INIT
 #---------------------------------------------------------------------------
-def init_redis_cache(redis_client_in):
-    global redis_client,cache_hits_perfunction
+def init_redis_cache(redis_client_in,prefix_in=""):
+    global redis_client,cache_hits_perfunction,prefix
     redis_client=redis_client_in
     cache_hits_perfunction={}
+    prefix=prefix_in
 
 #---------------------------------------------------------------------------
 # DECORATOR
@@ -21,11 +23,11 @@ def use_redis_cache(*roles,ttl=60):
     def wrapper(f):        
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            global redis_client,cache_hits_perfunction
+            global redis_client,cache_hits_perfunction,prefix
             finalhash=0
             for arg in args:
                 finalhash+=hash(str(arg))
-            key=f'{f.__name__}_{finalhash}'
+            key=f'{prefix}{f.__name__}_{finalhash}'
             
             red_obj=redis_client.get(key)
             
