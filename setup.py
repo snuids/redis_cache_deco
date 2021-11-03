@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-  name = 'redis_cache_decorator',
+  name = 'rediscachedecorator',
   packages = ['redis_cache_decorator'], # this must be the same as the name above
   version = '1.0.0',
   description = 'A decorator that memoized into redis',
