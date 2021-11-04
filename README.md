@@ -9,6 +9,8 @@ pip install redis-cache-deco
 # Example
 
 ```python
+from datetime import datetime
+import redis
 from redis_cache_deco import rcd
 
 rcd.init_redis_cache(redis.Redis(host='localhost', port=6379, db=0))
