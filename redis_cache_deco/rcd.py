@@ -1,11 +1,13 @@
 import redis
 import pickle
+import logging
 from functools import wraps
 from datetime import date, datetime
 
 cache_hits_perfunction={}
 redis_client=None
 prefix=""
+logger=logging.getLogger()
 
 #---------------------------------------------------------------------------
 # INIT
@@ -35,11 +37,12 @@ def use_redis_cache(*roles,ttl=60):
                 cache_hits_perfunction[f.__name__]={"Hits":0,"Misses":0}
             
             if red_obj==None:
-                ret= f(*args, **kwargs)   
-                print(ret)
+                ret= f(*args, **kwargs)     
+                logger.debug("No In Cache Calling:"+f.__name__)
                 redis_client.set(key,pickle.dumps(ret),ex=ttl)
                 cache_hits_perfunction[f.__name__]["Misses"]+=1
             else:
+                logger.debug("In Cache Returning:"+f.__name__)
                 cache_hits_perfunction[f.__name__]["Hits"]+=1
                 ret=pickle.loads(red_obj)
             return ret
