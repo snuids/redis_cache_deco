@@ -1,4 +1,4 @@
-# Redis Cache Deco
+# Redis Cache Decorator
 
 ## Installation
 
