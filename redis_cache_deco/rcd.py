@@ -14,7 +14,7 @@ logger=logging.getLogger()
 # INIT
 #---------------------------------------------------------------------------
 def init_redis_cache(redis_client_in,prefix_in="",debug_in=False):
-    global redis_client,cache_hits_perfunction,prefix
+    global redis_client,cache_hits_perfunction,prefix,debug
     redis_client=redis_client_in
     cache_hits_perfunction={}
     prefix=prefix_in
