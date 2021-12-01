@@ -7,16 +7,18 @@ from datetime import date, datetime
 cache_hits_perfunction={}
 redis_client=None
 prefix=""
+debug=False
 logger=logging.getLogger()
 
 #---------------------------------------------------------------------------
 # INIT
 #---------------------------------------------------------------------------
-def init_redis_cache(redis_client_in,prefix_in=""):
+def init_redis_cache(redis_client_in,prefix_in="",debug_in=False):
     global redis_client,cache_hits_perfunction,prefix
     redis_client=redis_client_in
     cache_hits_perfunction={}
     prefix=prefix_in
+    debug=debug_in
 
 #---------------------------------------------------------------------------
 # DECORATOR
@@ -25,20 +27,23 @@ def use_redis_cache(*roles,ttl=60):
     def wrapper(f):        
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            global redis_client,cache_hits_perfunction,prefix
+            global redis_client,cache_hits_perfunction,prefix,debug
             finalhash=0
             for arg in args:
                 finalhash+=hash(str(arg))
             key=f'{prefix}{f.__name__}_{finalhash}'
             
-            red_obj=redis_client.get(key)
+            if debug:
+                red_obj=None
+            else:
+                red_obj=redis_client.get(key)
             
             if not f.__name__ in cache_hits_perfunction:
                 cache_hits_perfunction[f.__name__]={"Hits":0,"Misses":0}
             
             if red_obj==None:
                 ret= f(*args, **kwargs)     
-                logger.debug("No In Cache Calling:"+f.__name__)
+                logger.debug("Not In Cache Calling:"+f.__name__)
                 redis_client.set(key,pickle.dumps(ret),ex=ttl)
                 cache_hits_perfunction[f.__name__]["Misses"]+=1
             else:

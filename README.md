@@ -26,3 +26,12 @@ print(res)
 
 rcd.cache_stats()
 ```
+
+## parameters
+
+init_redis_cache(redis_client_in,prefix_in="",debug_in=False)
+
+* prefix_in: The prefix to use in redis
+* debug_in: Bypass the redis cache
+
+
