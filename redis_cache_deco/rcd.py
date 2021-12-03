@@ -8,7 +8,7 @@ cache_hits_perfunction={}
 redis_client=None
 prefix=""
 debug=False
-logger=logging.getLogger()
+logger=logging.getLogger("rcd")
 
 #---------------------------------------------------------------------------
 # INIT
