@@ -28,9 +28,12 @@ def use_redis_cache(*roles,ttl=60):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             global redis_client,cache_hits_perfunction,prefix,debug
+
             finalhash=0
             for arg in args:
                 finalhash+=hash(str(arg))
+            for kwarg in kwargs:
+                finalhash+=hash(str(kwarg)+str(kwargs[kwarg]))
             key=f'{prefix}{f.__name__}_{finalhash}'
             
             if debug:
@@ -59,3 +62,38 @@ def use_redis_cache(*roles,ttl=60):
 #---------------------------------------------------------------------------
 def cache_stats():
     return cache_hits_perfunction
+
+# from datetime import datetime
+# import redis
+# #from redis_cache_deco import rcd
+
+# init_redis_cache(redis.Redis(host='localhost', port=6379, db=0))
+
+# @use_redis_cache(ttl=60)
+# def my_function(dt,array):
+#     print("My Function")
+#     return {"dt":dt,"array":array,"ret":"OK"}
+
+# @use_redis_cache(ttl=60)
+# def my_function2(user="toto"):
+#     print("My Function")
+#     return {"user":user}
+
+
+# res=my_function(datetime(2021,1,1,1,1),[{"a":1}])
+# print(res)
+# res=my_function2(user="tata")
+# print(res)
+# res=my_function2(user="titi")
+# print(res)
+# res=my_function2(user="toto")
+# print(res)
+# res=my_function2(user="tata")
+# print(res)
+# res=my_function2(user="titi")
+# print(res)
+# res=my_function2(user="toto")
+# print(res)
+
+
+# print(cache_stats())
