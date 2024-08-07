@@ -35,3 +35,7 @@ init_redis_cache(redis_client_in,prefix_in="",debug_in=False)
 * debug_in: Bypass the redis cache
 
 
+## Versions
+
+1.0.8 Deterministic hash function added
+
