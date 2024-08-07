@@ -1,8 +1,8 @@
-import redis
-import pickle
 import logging
+import pickle
 from functools import wraps
-from datetime import date, datetime
+
+import redis
 
 cache_hits_perfunction={}
 redis_client=None
@@ -10,15 +10,37 @@ prefix=""
 debug=False
 logger=logging.getLogger("rcd")
 
+def deterministic_hash(text:str):
+    """
+    Calculates the deterministic hash value for the given text.
+
+    Parameters:
+    text (str): The input text to calculate the hash value for.
+
+    Returns:
+    int: The calculated hash value.
+
+    """
+    hashval=0
+    for ch in text:
+        hashval = ( hashval*281  ^ ord(ch)*997) & 0xFFFFFFFF
+    return hashval
+
+hash_func=hash
+
 #---------------------------------------------------------------------------
 # INIT
 #---------------------------------------------------------------------------
-def init_redis_cache(redis_client_in,prefix_in="",debug_in=False):
-    global redis_client,cache_hits_perfunction,prefix,debug
+def init_redis_cache(redis_client_in,prefix_in="",debug_in=False,hash_func_in="deterministic"):
+    global redis_client,cache_hits_perfunction,prefix,debug,hash_func
     redis_client=redis_client_in
     cache_hits_perfunction={}
     prefix=prefix_in
     debug=debug_in
+    if hash_func_in=="deterministic":
+        hash_func=deterministic_hash
+    else:
+        hash_func=hash
 
 #---------------------------------------------------------------------------
 # DECORATOR
@@ -31,9 +53,9 @@ def use_redis_cache(*roles,ttl=60):
 
             finalhash=0
             for arg in args:
-                finalhash+=hash(str(arg))
-            for kwarg in kwargs:
-                finalhash+=hash(str(kwarg)+str(kwargs[kwarg]))
+                finalhash+=hash_func(str(arg))
+            for kwarg in kwargs.items():
+                finalhash+=hash_func(str(kwarg[0])+str(kwarg[1]))
             key=f'{prefix}{f.__name__}_{finalhash}'
             
             if debug:
@@ -44,13 +66,13 @@ def use_redis_cache(*roles,ttl=60):
             if not f.__name__ in cache_hits_perfunction:
                 cache_hits_perfunction[f.__name__]={"Hits":0,"Misses":0}
             
-            if red_obj==None:
+            if red_obj is None:
                 ret= f(*args, **kwargs)     
-                logger.debug("Not In Cache Calling:"+f.__name__)
+                logger.debug(f"Not In Cache Calling:{f.__name__} Key:{key}")
                 redis_client.set(key,pickle.dumps(ret),ex=ttl)
                 cache_hits_perfunction[f.__name__]["Misses"]+=1
             else:
-                logger.debug("In Cache Returning:"+f.__name__)
+                logger.debug(f"In Cache Returning:{f.__name__} Key:{key}")
                 cache_hits_perfunction[f.__name__]["Hits"]+=1
                 ret=pickle.loads(red_obj)
             return ret
